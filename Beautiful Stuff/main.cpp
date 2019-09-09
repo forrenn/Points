@@ -2,6 +2,7 @@
 #include <SDL/SDL.h>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 #pragma comment(lib,"SDL2.lib")
 #undef main
@@ -22,6 +23,7 @@ uint64_t xorshift64()
 struct MyPoint
 {
 	float r, g, b;
+
 };
 
 void setPixel(SDL_Surface* s, int x, int y, Uint32 c)
@@ -91,9 +93,11 @@ void main()
 		points.push_back({ r, g, b });
 	}
 
-
+	uint64_t frames = 0;
+	auto startTime = std::chrono::high_resolution_clock::now();
 	while (true)
 	{
+		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&ev))
 		{
 
@@ -142,6 +146,15 @@ void main()
 		}
 
 		SDL_UpdateWindowSurface(window);
+		++frames;
+		auto endTime = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> elapsedTime = endTime - startTime;
+		double totalTime = elapsedTime.count();
+		
+		std::chrono::duration<double> frameTimeChrono = endTime - currFrameStartTime;
+		double frameTime = frameTimeChrono.count();
+
+		std::cout << "FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
 	}
 
 	system("pause");
