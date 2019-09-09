@@ -8,8 +8,8 @@
 struct MyPoint
 {
 	float r, g, b;
-	int x, y;
 };
+
 void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -33,7 +33,7 @@ void main()
 		int x = i % w;
 		int y = i / w;
 
-		points.emplace_back(r, g, b, x, y);
+		points.push_back({ r, g, b});
 	}
 	while (true)
 	{
@@ -43,11 +43,18 @@ void main()
 		}
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		std::vector<SDL_Point> points;
-		for (int i = 0; i<1024*104; ++i) points.push_back({ rand() % w, rand() % h });
-
-		SDL_RenderDrawPoints(renderer, points.data(), points.size());
+		
+		auto it = points.begin();
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				MyPoint& p = *it++;
+				SDL_SetRenderDrawColor(renderer, p.r * 255, p.g * 255, p.b * 255, 255);
+				SDL_RenderDrawPoint(renderer, x, y);
+			}
+		}
+		
 		SDL_RenderPresent(renderer);
 	}
 
