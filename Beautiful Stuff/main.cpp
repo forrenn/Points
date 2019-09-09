@@ -6,8 +6,8 @@
 #pragma comment(lib,"SDL2.lib")
 #undef main
 
-double LOSS = 0.1; //percentage of color lost for each pixel of distance (multiplicative)
-double LOSS_MULT = (100 - LOSS) / 100;
+double LOSS = 0.001; //percentage of color lost for each pixel of distance (multiplicative)
+float LOSS_MULT = (100 - LOSS) / 100;
 
 uint64_t xorshift64()
 {
@@ -58,7 +58,8 @@ MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
 double getRandomWeightedValue()
 {
 	double n = double(xorshift64()) / uint64_t(-1);
-	return -log2(n);
+	//return -log2(n);
+	return 1 / n;
 }
 
 void main()
@@ -106,16 +107,15 @@ void main()
 			{
 				MyPoint& p = *it;
 
-				uint32_t s[2];
-				*((uint64_t*)&s) = xorshift64();
+				uint32_t s = xorshift64();
 				int sign1, sign2;
-				sign1 = s[0] % 2 ? 1 : -1;
-				sign2 = s[1] % 2 ? 1 : -1;
+				sign1 = (s >>= 1) % 2 ? 1 : -1;
+				sign2 = (s >>=1) % 2 ? 1 : -1;
 
-				double dist_x = getRandomWeightedValue();
-				double dist_y = getRandomWeightedValue();
-				double dist = sqrt(dist_x*dist_x + dist_y * dist_y);
-				double colorMult = pow(LOSS_MULT, dist);
+				float dist_x = getRandomWeightedValue();
+				float dist_y = getRandomWeightedValue();
+				float dist = sqrt(dist_x*dist_x + dist_y * dist_y);
+				float colorMult = pow(LOSS_MULT, dist);
 
 				int targetX = x + sign1 * dist_x;
 				int targetY = y + sign2 * dist_y;
