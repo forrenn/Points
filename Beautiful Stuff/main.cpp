@@ -9,6 +9,9 @@
 
 double LOSS = 0.001; //percentage of color lost for each pixel of distance (multiplicative)
 float LOSS_MULT = (100 - LOSS) / 100;
+double REFRESH_RATE = 60;
+
+double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
 
 uint64_t xorshift64()
 {
@@ -22,8 +25,7 @@ uint64_t xorshift64()
 
 struct MyPoint
 {
-	float r, g, b;
-
+	uint8_t r, g, b;
 };
 
 void setPixel(SDL_Surface* s, int x, int y, Uint32 c)
@@ -81,20 +83,16 @@ void main()
 	std::vector<MyPoint> points;
 	for (int i = 0; i < w*h; i++)
 	{
-		float r = xorshift64();
-		float g = xorshift64();
-		float b = xorshift64();
-		r /= uint64_t(-1);
-		g /= uint64_t(-1);
-		b /= uint64_t(-1);
-		int x = i % w;
-		int y = i / w;
+		uint8_t r = xorshift64();
+		uint8_t g = xorshift64();
+		uint8_t b = xorshift64();
 
 		points.push_back({ r, g, b });
 	}
 
 	uint64_t frames = 0;
 	auto startTime = std::chrono::high_resolution_clock::now();
+	double refreshAccumulator = 0;
 	while (true)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
@@ -125,15 +123,15 @@ void main()
 				
 				uint64_t r1 = xorshift64();
 				uint64_t r2 = xorshift64();
-				if (r1 & 1)
+				if (r1 > r2)
 				{
 					*neighbor = p;
-					setPixel(windowSurface, neighborX, neighborY, p.r * 255, p.g * 255, p.b * 255);
+					setPixel(windowSurface, neighborX, neighborY, p.r, p.g, p.b);
 				}
 				else
 				{
 					p = *neighbor;
-					setPixel(windowSurface, x, y, neighbor->r * 255, neighbor->g * 255, neighbor->b * 255);
+					setPixel(windowSurface, x, y, neighbor->r, neighbor->g, neighbor->b);
 				}
 
 				//setPixel(windowSurface, x, y, p.r * 255, p.g * 255, p.b * 255);
@@ -141,7 +139,6 @@ void main()
 			}
 		}
 
-		SDL_UpdateWindowSurface(window);
 		++frames;
 		auto endTime = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedTime = endTime - startTime;
@@ -150,7 +147,15 @@ void main()
 		std::chrono::duration<double> frameTimeChrono = endTime - currFrameStartTime;
 		double frameTime = frameTimeChrono.count();
 
-		std::cout << "FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
+		refreshAccumulator += frameTime;
+		if (refreshAccumulator > REFRESH_PERIOD)
+		{
+			SDL_UpdateWindowSurface(window);
+			refreshAccumulator -= REFRESH_PERIOD;
+			if (refreshAccumulator > REFRESH_PERIOD) refreshAccumulator = 0;
+		}
+
+		if (frames % 100 == 0) std::cout << "FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
 	}
 
 	system("pause");
