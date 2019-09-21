@@ -129,7 +129,8 @@ void main()
 	auto startTime = std::chrono::high_resolution_clock::now();
 	double refreshAccumulator = 0;
 
-	while (true)
+	bool running = true;
+	while (running)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&ev))
@@ -211,7 +212,7 @@ void main()
 				colorsCounter[index]++;
 			}
 			int totalColors = 0;
-			for (auto& it : colorsCounter)
+			for (const auto& it : colorsCounter)
 				totalColors += it > 0;
 			std::cout << totalColors << " unique colors remaining\n";
 
@@ -225,6 +226,14 @@ void main()
 						std::cout << "RIP RGB " << (i & 0xFF) << " " << ((i & 0xFF00) >> 8) << " " << ((i & 0xFF0000) >> 16) << " at frame " << frames << "\n";
 			}
 			colorsCounterOld = colorsCounter;
+
+			if (totalColors == 1)
+			{
+				running = false;
+				for (int i = 0; i < 16777216; ++i)
+					if (colorsCounter[i] != 0)
+						std::cout << "Winner is: RGB " << (i & 0xFF) << " " << ((i & 0xFF00) >> 8) << " " << ((i & 0xFF0000) >> 16) << " at frame " << frames << "\n";
+			}
 		}
 	}
 
