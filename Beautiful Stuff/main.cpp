@@ -76,11 +76,9 @@ void main()
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
-	//	SDL_Renderer* renderer;
 	int w = 1280;
 	int h = 720;
 
-	//SDL_CreateWindowAndRenderer(w, h, 0, &window, &renderer);
 	window = SDL_CreateWindow("Point communism", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, 0);
 	windowSurface = SDL_GetWindowSurface(window);
 
@@ -145,16 +143,12 @@ void main()
 				if (r1 > r2)
 				{
 					*neighbor = p;
-					//setPixel(windowSurface, neighborX, neighborY, p.r, p.g, p.b);
 				}
 				else
 				{
 					p = *neighbor;
-					//setPixel(windowSurface, x, y, neighbor->r, neighbor->g, neighbor->b);
 				}
 
-
-				//setPixel(windowSurface, x, y, p.r * 255, p.g * 255, p.b * 255);
 				++it;
 			}
 		}
@@ -165,7 +159,6 @@ void main()
 			for (int x = 0; x < w; ++x)
 			{
 				setPixel(windowSurface, x, y, it->r, it->g, it->b);
-				//setPixel(windowSurface, x, y, 255, 0, 0);
 				++it;
 			}
 		}
@@ -206,12 +199,8 @@ void main()
 			if (totalColors < 100)
 			{
 				for (int i = 0; i < 16777216; ++i)
-				{
 					if (colorsCounterOld[i] > 0 && colorsCounter[i] == 0)
-					{
 						std::cout << "RIP RGB " << (i & 0xFF) << " " << ((i & 0xFF00) >> 8) << " " << ((i & 0xFF0000) >> 16) << " at frame " << frames << "\n";
-					}
-				}
 			}
 			colorsCounterOld = colorsCounter;
 		}
