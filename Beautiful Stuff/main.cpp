@@ -5,6 +5,7 @@
 #include <chrono>
 #include <fstream>
 #include <SDL/SDL_image.h>
+#include <string>
 
 #pragma comment(lib,"SDL2.lib")
 #pragma comment(lib,"SDL2_image.lib")
@@ -74,6 +75,11 @@ double getRandomWeightedValue()
 void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
+
+	std::string path;
+	std::cout << "Enter desired base image path or invalid path for random points: ";
+	std::getline(std::cin, path);
+
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
 	int w = 1280;
@@ -81,26 +87,42 @@ void main()
 
 	window = SDL_CreateWindow("Point communism", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, 0);
 	windowSurface = SDL_GetWindowSurface(window);
-
-	SDL_Surface* img = IMG_Load("e:/fc/img/space-planet-surface-wallpaper.jpg");
-	SDL_BlitScaled(img, &img->clip_rect, windowSurface, &windowSurface->clip_rect);
-
 	std::vector<int> colorsCounter(16777216), colorsCounterOld(16777216);
-
 	SDL_Event ev;
 	std::vector<MyPoint> points;
-	Uint32* pixels = (Uint32*)windowSurface->pixels;
-	SDL_PixelFormat* format = windowSurface->format;
-	for (int i = 0; i < w*h; i++)
-	{
-		Uint32 px = *pixels++;
-		uint8_t r = (px & format->Rmask) >> format->Rshift;
-		uint8_t g = (px & format->Gmask) >> format->Gshift;
-		uint8_t b = (px & format->Bmask) >> format->Bshift;
 
-		points.push_back({ r, g, b });
-		int index = r + g * 256 + b * 65536;
-		colorsCounterOld[index]++;
+	SDL_Surface* img = IMG_Load(path.c_str());
+	SDL_BlitScaled(img, &img->clip_rect, windowSurface, &windowSurface->clip_rect);
+	
+	if (img)
+	{
+		Uint32* pixels = (Uint32*)windowSurface->pixels;
+		SDL_PixelFormat* format = windowSurface->format;
+		for (int i = 0; i < w*h; i++)
+		{
+			Uint32 px = *pixels++;
+			uint8_t r = (px & format->Rmask) >> format->Rshift;
+			uint8_t g = (px & format->Gmask) >> format->Gshift;
+			uint8_t b = (px & format->Bmask) >> format->Bshift;
+
+			points.push_back({ r, g, b });
+			int index = r + g * 256 + b * 65536;
+			colorsCounterOld[index]++;
+		}
+	}
+	else
+	{
+		std::cout << "Can't open " << path << ", generating random points...\n";
+		for (int i = 0; i < w*h; i++)
+		{
+			uint8_t r = xorshift64();
+			uint8_t g = xorshift64();
+			uint8_t b = xorshift64();
+
+			points.push_back({ r, g, b });
+			int index = r + g * 256 + b * 65536;
+			colorsCounterOld[index]++;
+		}
 	}
 
 	uint64_t frames = 0;
