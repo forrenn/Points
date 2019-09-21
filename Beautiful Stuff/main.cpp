@@ -109,38 +109,34 @@ void main()
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				MyPoint& p = *it;
+				MyPoint& p = *getPointByCoords(points, x, y, w, h);
 
-				uint32_t s = xorshift64();
-				int sign1, sign2;
-				sign1 = (s >>= 1) % 2 ? 1 : -1;
-				sign2 = (s >>=1) % 2 ? 1 : -1;
-
-				float dist_x = getRandomWeightedValue();
-				float dist_y = getRandomWeightedValue();
-				float dist = sqrt(dist_x*dist_x + dist_y * dist_y);
-				float colorMult = pow(LOSS_MULT, dist);
-
-				int targetX = x + sign1 * dist_x;
-				int targetY = y + sign2 * dist_y;
-				MyPoint* targetPoint = getPointByCoords(points, targetX, targetY, w, h);
-
-				if (targetPoint)
+				MyPoint* neighbor = nullptr;
+				int neighborX, neighborY;
+				while (!neighbor) //find the right neighbor
 				{
-					float transferR = std::min<float>(p.r, getRandomWeightedValue());
-					float transferG = std::min<float>(p.g, getRandomWeightedValue());
-					float transferB = std::min<float>(p.b, getRandomWeightedValue());
-
-					p.r -= transferR;
-					p.g -= transferG;
-					p.b -= transferB;
-
-					targetPoint->r += transferR * colorMult;
-					targetPoint->g += transferG * colorMult;
-					targetPoint->b += transferB * colorMult;
+					neighborX = x;
+					neighborY = y;
+					uint8_t side = xorshift64() % 4;					
+					neighborX += side & 1 ? 1 : -1;
+					neighborY += side & 2 ? 1 : -1;
+					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
+				}
+				
+				uint64_t r1 = xorshift64();
+				uint64_t r2 = xorshift64();
+				if (r1 & 1)
+				{
+					*neighbor = p;
+					setPixel(windowSurface, neighborX, neighborY, p.r * 255, p.g * 255, p.b * 255);
+				}
+				else
+				{
+					p = *neighbor;
+					setPixel(windowSurface, x, y, neighbor->r * 255, neighbor->g * 255, neighbor->b * 255);
 				}
 
-				setPixel(windowSurface, x, y, p.r * 255, p.g * 255, p.b * 255);
+				//setPixel(windowSurface, x, y, p.r * 255, p.g * 255, p.b * 255);
 				++it;
 			}
 		}
