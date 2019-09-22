@@ -32,21 +32,6 @@ struct MyPoint
 	uint8_t r, g, b;
 };
 
-void setPixel(SDL_Surface* s, int x, int y, Uint32 c)
-{
-	int offset = y * s->pitch + x * 4;
-	memcpy((char*)s->pixels + offset, &c, 4);
-}
-
-void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b, uint32_t a)
-{
-	Uint32 color = 0;
-	color |= a << 24;
-	color |= b << 16;
-	color |= g << 8;
-	color |= r;
-	setPixel(s, x, y, color);
-}
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 {
 	SDL_PixelFormat* format = s->format;
@@ -54,8 +39,9 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 	color |= b << format->Bshift;
 	color |= g << format->Gshift;
 	color |= r << format->Rshift;
-	//color |= 255 << format->Ashift;
-	setPixel(s, x, y, color);
+
+	char* px = (char*)s->pixels + s->pitch*y + x * format->BytesPerPixel;
+	*(Uint32*)px = color;
 }
 
 MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
@@ -136,8 +122,7 @@ void main()
 		while (SDL_PollEvent(&ev))
 		{
 
-		}
-		SDL_FillRect(windowSurface, 0, 0);
+		}		
 
 		auto it = points.begin();
 		for (int y = 0; y < h; ++y)
@@ -187,6 +172,7 @@ void main()
 		refreshAccumulator += frameTime;
 		if (refreshAccumulator > REFRESH_PERIOD)
 		{
+			SDL_FillRect(windowSurface, nullptr, 0);
 			it = points.begin();
 			for (int y = 0; y < h; ++y)
 			{
