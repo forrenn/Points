@@ -121,7 +121,6 @@ void main()
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&ev))
 		{
-
 		}		
 
 		auto it = points.begin();
@@ -169,7 +168,10 @@ void main()
 		std::chrono::duration<double> frameTimeChrono = endTime - currFrameStartTime;
 		double frameTime = frameTimeChrono.count();
 
-		refreshAccumulator += frameTime;
+		auto windowFlags = SDL_GetWindowFlags(window);
+		if (!(windowFlags & SDL_WINDOW_MINIMIZED))
+			refreshAccumulator += frameTime;
+
 		if (refreshAccumulator > REFRESH_PERIOD)
 		{
 			SDL_FillRect(windowSurface, nullptr, 0);
