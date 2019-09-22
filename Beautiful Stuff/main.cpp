@@ -176,15 +176,6 @@ void main()
 			}
 		}
 
-		it = points.begin();
-		for (int y = 0; y < h; ++y)
-		{
-			for (int x = 0; x < w; ++x)
-			{
-				setPixel(windowSurface, x, y, it->r, it->g, it->b);
-				++it;
-			}
-		}
 		++frames;
 		auto endTime = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedTime = endTime - startTime;
@@ -196,6 +187,16 @@ void main()
 		refreshAccumulator += frameTime;
 		if (refreshAccumulator > REFRESH_PERIOD)
 		{
+			it = points.begin();
+			for (int y = 0; y < h; ++y)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					setPixel(windowSurface, x, y, it->r, it->g, it->b);
+					++it;
+				}
+			}
+
 			SDL_UpdateWindowSurface(window);
 			refreshAccumulator -= REFRESH_PERIOD;
 			if (refreshAccumulator > REFRESH_PERIOD) refreshAccumulator = 0;
