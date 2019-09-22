@@ -162,8 +162,8 @@ void main()
 				}
 				
 				uint64_t r1 = xorshift64();
-				uint64_t r2 = xorshift64();
-				if (r1 > r2)
+				//uint64_t r2 = xorshift64();
+				if (r1 & 1)
 				{
 					*neighbor = p;
 				}
