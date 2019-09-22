@@ -17,14 +17,14 @@ double REFRESH_RATE = 60;
 
 double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
 
+uint64_t xorshift_state = 1;
 uint64_t xorshift64()
 {
-	static uint64_t a = 0xFA38298A249B2439;
-	uint64_t x = a;
+	uint64_t x = xorshift_state;
 	x ^= x << 13;
 	x ^= x >> 7;
 	x ^= x << 17;
-	return a = x;
+	return xorshift_state = x;
 }
 
 struct MyPoint
@@ -69,6 +69,9 @@ void main()
 	std::string path;
 	std::cout << "Enter desired base image path or invalid path for random points: ";
 	std::getline(std::cin, path);
+
+	std::cout << "Enter RNG seed: ";
+	std::cin >> xorshift_state;
 
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
