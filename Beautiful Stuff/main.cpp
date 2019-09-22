@@ -202,7 +202,7 @@ void main()
 			if (refreshAccumulator > REFRESH_PERIOD) refreshAccumulator = 0;
 		}
 
-		if (frames % 100 == 0) std::cout << "FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
+		if (frames % 100 == 0) std::cout << "Frame " << frames << ", FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
 
 		if (frames % 200 == 0)
 		{
