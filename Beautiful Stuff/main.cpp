@@ -66,6 +66,8 @@ void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 
+	int w = 1280;
+	int h = 720;
 	std::string path;
 	std::cout << "Enter desired base image path or invalid path for random points: ";
 	std::getline(std::cin, path);
@@ -73,10 +75,13 @@ void main()
 	std::cout << "Enter RNG seed: ";
 	std::cin >> xorshift_state;
 
+	std::cout << "Enter desired window width: ";
+	std::cin >> w;
+	std::cout << "Enter desire window height: ";
+	std::cin >> h;
+
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
-	int w = 1280;
-	int h = 720;
 
 	window = SDL_CreateWindow("Point communism", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, 0);
 	windowSurface = SDL_GetWindowSurface(window);
