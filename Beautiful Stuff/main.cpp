@@ -7,6 +7,7 @@
 #include <SDL/SDL_image.h>
 #include <string>
 #include <thread>
+#include <mutex>
 #include "MyPoint.h"
 
 #pragma comment(lib,"SDL2.lib")
@@ -18,7 +19,6 @@ float LOSS_MULT = (100 - LOSS) / 100;
 double REFRESH_RATE = 60;
 
 double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
-std::vector<std::thread> workers;
 
 uint64_t xorshift64(uint64_t* state)
 {
@@ -36,7 +36,7 @@ MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
 		return &pts[y*w + x];
 }
 
-void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
+void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running, std::mutex& mtx)
 {
 	int startX = 0;
 	int workerPixels = h / maxWorkers;
@@ -46,6 +46,7 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 
 	while (running)
 	{
+		mtx.lock();
 		auto it = points.begin()+(startY*w);
 		for (int y = startY; y < endY; ++y)
 		{
@@ -75,6 +76,7 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 				++it;
 			}
 		}
+		mtx.unlock();
 	}
 }
 
