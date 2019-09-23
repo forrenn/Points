@@ -88,6 +88,7 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 
 void main()
 {
+	int threadCount;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	/*if (true) //for tests, remove when releasing!!!
 	{
@@ -106,10 +107,19 @@ void main()
 	std::cout << "Enter RNG seed: ";
 	std::cin >> xorshift_state;
 
-	std::cout << "Enter desired window width: ";
+	std::cout << "Enter desired window width (0 for default value of 1024): ";
 	std::cin >> w;
-	std::cout << "Enter desire window height: ";
+	if (w == 0) w = 1024;
+	std::cout << "Enter desired window height (0 for default value of 600): ";
 	std::cin >> h;
+	if (h = 0) h = 600;
+	std::cout << "Enter desired thread count (0 for auto detect): ";
+	std::cin >> threadCount;
+	if (threadCount == 0) threadCount = std::thread::hardware_concurrency();
+
+	if (h % threadCount != 0) std::cout << "Height is not a multiple of thread count (" << threadCount << "), increasing it to ";
+	while (h++ % threadCount != 0) {};
+	std::cout << h << "\n";
 
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
@@ -159,7 +169,6 @@ void main()
 	double refreshAccumulator = 0;
 	
 	bool running = true;
-	int threadCount = std::thread::hardware_concurrency();
 	std::vector<std::thread> workers(threadCount);
 
 	while (running)
