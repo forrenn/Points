@@ -189,15 +189,8 @@ void main()
 				}
 				
 				uint64_t r1 = xorshift64();
-				//uint64_t r2 = xorshift64();
-				if (r1 & 1)
-				{
-					*neighbor = p;
-				}
-				else
-				{
-					p = *neighbor;
-				}
+				if (r1 & 1) *neighbor = p;
+				else p = *neighbor;
 
 				++it;
 			}
@@ -215,7 +208,7 @@ void main()
 		if (!(windowFlags & SDL_WINDOW_MINIMIZED))
 			refreshAccumulator += frameTime;
 
-		if (refreshAccumulator > REFRESH_PERIOD)
+		if (refreshAccumulator > REFRESH_PERIOD) //sparse refreshing (don't refresh faster than predetermined rate)
 		{
 			SDL_FillRect(windowSurface, nullptr, 0);
 			it = points.begin();
