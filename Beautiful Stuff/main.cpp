@@ -19,6 +19,13 @@ double REFRESH_RATE = 60;
 
 double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
 
+uint64_t xorshift_seed()
+{
+	uint64_t ret = 0;
+	for (int i = 0; i < 5; ++i)	ret |= uint64_t(rand()) << (i * 15);
+	return ret;
+}
+
 uint64_t xorshift64(uint64_t* state)
 {
 	uint64_t x = *state;
@@ -89,6 +96,7 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 void main()
 {
 	int threadCount;
+	srand(time(nullptr));
 	SDL_Init(SDL_INIT_EVERYTHING);
 	/*if (true) //for tests, remove when releasing!!!
 	{
@@ -104,8 +112,10 @@ void main()
 	std::cout << "Enter desired base image path or invalid path for random points: ";
 	std::getline(std::cin, path);
 
-	std::cout << "Enter RNG seed: ";
+	std::cout << "Enter RNG seed (0 for random): ";
 	std::cin >> xorshift_state;
+	if (xorshift_state == 0)
+		xorshift_state = xorshift_seed();
 
 	std::cout << "Enter desired window width (0 for default value of 1024): ";
 	std::cin >> w;
