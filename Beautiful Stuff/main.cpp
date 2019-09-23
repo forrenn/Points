@@ -7,6 +7,7 @@
 #include <SDL/SDL_image.h>
 #include <string>
 #include <thread>
+#include "MyPoint.h"
 
 #pragma comment(lib,"SDL2.lib")
 #pragma comment(lib,"SDL2_image.lib")
@@ -40,9 +41,39 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 
 	while (running)
 	{
+		auto it = points.begin()+(startY*w);
+		for (int y = startY; y < endY; ++y)
+		{
+			for (int x = startX; x < endX; ++x)
+			{
+				MyPoint& p = *it;
 
+				MyPoint* neighbor = nullptr;
+				int neighborX, neighborY;
+				while (!neighbor) //find the right neighbor
+				{
+					neighborX = x;
+					neighborY = y;
+					uint8_t side = xorshift64_thr(&rndSeed) % 8;
+					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
+					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
+					neighborX += table1[side];
+					neighborY += table2[side];
+					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
+					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
+				}
+
+				uint64_t r1 = xorshift64_thr(&rndSeed);
+				if (r1 & 1) *neighbor = p;
+				else p = *neighbor;
+
+				++it;
+			}
+		}
 	}
 }
+
+
 uint64_t xorshift64()
 {
 	uint64_t x = xorshift_state;
@@ -51,15 +82,6 @@ uint64_t xorshift64()
 	x ^= x << 17;
 	return xorshift_state = x;
 }
-
-struct MyPoint
-{
-	uint8_t r, g, b;
-	bool operator==(const MyPoint& p)
-	{
-		return r == p.r && g == p.g && b == p.b;
-	}
-};
 
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 {
@@ -78,13 +100,6 @@ MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
 	if (x < 0 || y < 0 || x >= w || y >= h) return nullptr;
 	else
 		return &pts[y*w + x];
-}
-
-double getRandomWeightedValue()
-{
-	double n = double(xorshift64()) / uint64_t(-1);
-	//return -log2(n);
-	return 1 / n;
 }
 
 void main()
