@@ -7,7 +7,6 @@
 #include <SDL/SDL_image.h>
 #include <string>
 #include <thread>
-#include <mutex>
 #include "MyPoint.h"
 
 #pragma comment(lib,"SDL2.lib")
@@ -36,7 +35,7 @@ MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
 		return &pts[y*w + x];
 }
 
-void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running, std::mutex& mtx)
+void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
 {
 	int startX = 0;
 	int workerPixels = h / maxWorkers;
@@ -44,39 +43,34 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 	int endX = w;
 	int endY = startY + workerPixels;
 
-	while (running)
+	auto it = points.begin() + (startY*w);
+	for (int y = startY; y < endY; ++y)
 	{
-		mtx.lock();
-		auto it = points.begin()+(startY*w);
-		for (int y = startY; y < endY; ++y)
+		for (int x = startX; x < endX; ++x)
 		{
-			for (int x = startX; x < endX; ++x)
+			MyPoint& p = *it;
+
+			MyPoint* neighbor = nullptr;
+			int neighborX, neighborY;
+			while (!neighbor) //find the right neighbor
 			{
-				MyPoint& p = *it;
-
-				MyPoint* neighbor = nullptr;
-				int neighborX, neighborY;
-				while (!neighbor) //find the right neighbor
-				{
-					neighborX = x;
-					neighborY = y;
-					uint8_t side = xorshift64(&rndSeed) % 8;
-					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
-					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
-					neighborX += table1[side];
-					neighborY += table2[side];
-					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
-				}
-
-				uint64_t r1 = xorshift64(&rndSeed);
-				if (r1 & 1) *neighbor = p;
-				else p = *neighbor;
-
-				++it;
+				neighborX = x;
+				neighborY = y;
+				uint8_t side = xorshift64(&rndSeed) % 8;
+				static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
+				static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
+				neighborX += table1[side];
+				neighborY += table2[side];
+				neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
+				if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 			}
+
+			uint64_t r1 = xorshift64(&rndSeed);
+			if (r1 & 1) *neighbor = p;
+			else p = *neighbor;
+
+			++it;
 		}
-		mtx.unlock();
 	}
 }
 
@@ -167,15 +161,6 @@ void main()
 	bool running = true;
 	int threadCount = std::thread::hardware_concurrency();
 	std::vector<std::thread> workers(threadCount);
-	std::vector<std::mutex> mutexes(threadCount);
-	for (int i = 0; i < threadCount; ++i)
-	{
-		mutexes[i].lock();
-		workers[i] = std::thread(routine, points, i, threadCount, w,h,xorshift64(&xorshift_state),running,mutexes[i]);
-		workers[i].detach();
-	}
-
-	for (int i = 0; i < threadCount; ++i) mutexes[i].unlock();
 
 	while (running)
 	{
@@ -184,35 +169,11 @@ void main()
 		{
 		}		
 
-		auto it = points.begin();
-		for (int y = 0; y < h; ++y)
+		for (int i = 0; i < threadCount; ++i)
 		{
-			for (int x = 0; x < w; ++x)
-			{
-				MyPoint& p = *it;
-
-				MyPoint* neighbor = nullptr;
-				int neighborX, neighborY;
-				while (!neighbor) //find the right neighbor
-				{
-					neighborX = x;
-					neighborY = y;
-					uint8_t side = xorshift64(&xorshift_state) % 8;
-					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
-					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
-					neighborX += table1[side];
-					neighborY += table2[side];
-					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
-				}
-				
-				uint64_t r1 = xorshift64(&xorshift_state);
-				if (r1 & 1) *neighbor = p;
-				else p = *neighbor;
-
-				++it;
-			}
+			workers[i] = std::thread(routine, std::ref(points), i, threadCount, w, h, xorshift64(&xorshift_state), std::ref(running));
 		}
+		for (auto& it_t : workers) it_t.join();
 
 		++frames;
 		auto endTime = std::chrono::high_resolution_clock::now();
@@ -229,7 +190,7 @@ void main()
 		if (refreshAccumulator > REFRESH_PERIOD) //sparse refreshing (don't refresh faster than predetermined rate)
 		{
 			SDL_FillRect(windowSurface, nullptr, 0);
-			it = points.begin();
+			auto it = points.begin();
 			for (int y = 0; y < h; ++y)
 			{
 				for (int x = 0; x < w; ++x)
