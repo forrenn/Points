@@ -149,8 +149,8 @@ void main()
 					neighborX = x;
 					neighborY = y;
 					uint8_t side = xorshift64() % 8;		
-					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 };
-					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 };
+					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
+					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
 					neighborX += table1[side];
 					neighborY += table2[side];
 					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
