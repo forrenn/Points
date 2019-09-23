@@ -163,8 +163,20 @@ void main()
 	uint64_t frames = 0;
 	auto startTime = std::chrono::high_resolution_clock::now();
 	double refreshAccumulator = 0;
-
+	
 	bool running = true;
+	int threadCount = std::thread::hardware_concurrency();
+	std::vector<std::thread> workers(threadCount);
+	std::vector<std::mutex> mutexes(threadCount);
+	for (int i = 0; i < threadCount; ++i)
+	{
+		mutexes[i].lock();
+		workers[i] = std::thread(routine, points, i, threadCount, w,h,xorshift64(&xorshift_state),running,mutexes[i]);
+		workers[i].detach();
+	}
+
+	for (int i = 0; i < threadCount; ++i) mutexes[i].unlock();
+
 	while (running)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
