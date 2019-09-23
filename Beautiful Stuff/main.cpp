@@ -18,17 +18,22 @@ float LOSS_MULT = (100 - LOSS) / 100;
 double REFRESH_RATE = 60;
 
 double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
-
-uint64_t xorshift_state = 1;
 std::vector<std::thread> workers;
 
-uint64_t xorshift64_thr(uint64_t* state)
+uint64_t xorshift64(uint64_t* state)
 {
 	uint64_t x = *state;
 	x ^= x << 13;
 	x ^= x >> 7;
 	x ^= x << 17;
 	return *state = x;
+}
+
+MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
+{
+	if (x < 0 || y < 0 || x >= w || y >= h) return nullptr;
+	else
+		return &pts[y*w + x];
 }
 
 void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
@@ -54,7 +59,7 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 				{
 					neighborX = x;
 					neighborY = y;
-					uint8_t side = xorshift64_thr(&rndSeed) % 8;
+					uint8_t side = xorshift64(&rndSeed) % 8;
 					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
 					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
 					neighborX += table1[side];
@@ -63,7 +68,7 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 				}
 
-				uint64_t r1 = xorshift64_thr(&rndSeed);
+				uint64_t r1 = xorshift64(&rndSeed);
 				if (r1 & 1) *neighbor = p;
 				else p = *neighbor;
 
@@ -71,16 +76,6 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 			}
 		}
 	}
-}
-
-
-uint64_t xorshift64()
-{
-	uint64_t x = xorshift_state;
-	x ^= x << 13;
-	x ^= x >> 7;
-	x ^= x << 17;
-	return xorshift_state = x;
 }
 
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
@@ -93,13 +88,6 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 
 	char* px = (char*)s->pixels + s->pitch*y + x * format->BytesPerPixel;
 	*(Uint32*)px = color;
-}
-
-MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
-{
-	if (x < 0 || y < 0 || x >= w || y >= h) return nullptr;
-	else
-		return &pts[y*w + x];
 }
 
 void main()
@@ -115,6 +103,7 @@ void main()
 	int w = 1280;
 	int h = 720;
 	std::string path;
+	uint64_t xorshift_state = 1;
 	std::cout << "Enter desired base image path or invalid path for random points: ";
 	std::getline(std::cin, path);
 
@@ -159,9 +148,9 @@ void main()
 		std::cout << "Can't open " << path << ", generating random points...\n";
 		for (int i = 0; i < w*h; i++)
 		{
-			uint8_t r = xorshift64();
-			uint8_t g = xorshift64();
-			uint8_t b = xorshift64();
+			uint8_t r = xorshift64(&xorshift_state);
+			uint8_t g = xorshift64(&xorshift_state);
+			uint8_t b = xorshift64(&xorshift_state);
 
 			points.push_back({ r, g, b });
 			int index = r + g * 256 + b * 65536;
@@ -194,7 +183,7 @@ void main()
 				{
 					neighborX = x;
 					neighborY = y;
-					uint8_t side = xorshift64() % 8;		
+					uint8_t side = xorshift64(&xorshift_state) % 8;
 					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
 					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
 					neighborX += table1[side];
@@ -203,7 +192,7 @@ void main()
 					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 				}
 				
-				uint64_t r1 = xorshift64();
+				uint64_t r1 = xorshift64(&xorshift_state);
 				if (r1 & 1) *neighbor = p;
 				else p = *neighbor;
 
