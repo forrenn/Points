@@ -112,14 +112,17 @@ void main()
 	if (w == 0) w = 1024;
 	std::cout << "Enter desired window height (0 for default value of 600): ";
 	std::cin >> h;
-	if (h = 0) h = 600;
+	if (h == 0) h = 600;
 	std::cout << "Enter desired thread count (0 for auto detect): ";
 	std::cin >> threadCount;
 	if (threadCount == 0) threadCount = std::thread::hardware_concurrency();
 
-	if (h % threadCount != 0) std::cout << "Height is not a multiple of thread count (" << threadCount << "), increasing it to ";
-	while (h++ % threadCount != 0) {};
-	std::cout << h << "\n";
+	if (h % threadCount != 0)
+	{
+		std::cout << "Height is not a multiple of thread count (" << threadCount << "), increasing it to ";
+		h += threadCount - (h % threadCount);
+		std::cout << h << "\n";
+	}	
 
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
