@@ -209,9 +209,9 @@ void main()
 			if (refreshAccumulator > REFRESH_PERIOD) refreshAccumulator = 0;
 		}
 
-		if (frames % 100 == 0) std::cout << "Frame " << frames << ", FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
+		if (frames % 200 == 0) std::cout << "Frame " << frames << ", FPS: inst: " << 1/frameTime << ", avg: " << frames / totalTime << "\n";
 
-		if (frames % 200 == 0)
+		if (frames % 400 == 0)
 		{
 			for (auto& it : colorsCounter) it = 0;
 			for (auto it : points)
@@ -231,7 +231,12 @@ void main()
 			{
 				for (int i = 0; i < 16777216; ++i)
 					if (colorsCounterOld[i] > 0 && colorsCounter[i] == 0)
-						std::cout << "RIP RGB " << (i & 0xFF) << " " << ((i & 0xFF00) >> 8) << " " << ((i & 0xFF0000) >> 16) << " at frame " << frames << "\n";
+					{
+						int r = i & 0xFF;
+						int g = (i & 0xFF00) >> 8;
+						int b = (i & 0xFF0000) >> 16;
+						std::cout << "RIP RGB " << r << " " << g << " " << b << " at frame " << frames << "\n";
+					}						
 			}
 			colorsCounterOld = colorsCounter;
 
@@ -240,7 +245,12 @@ void main()
 				running = false;
 				for (int i = 0; i < 16777216; ++i)
 					if (colorsCounter[i] != 0)
-						std::cout << "Winner is: RGB " << (i & 0xFF) << " " << ((i & 0xFF00) >> 8) << " " << ((i & 0xFF0000) >> 16) << " at frame " << frames << "\n";
+					{
+						int r = i & 0xFF;
+						int g = (i & 0xFF00) >> 8;
+						int b = (i & 0xFF0000) >> 16;
+						std::cout << "Winner is: RGB " << r << " " << g << " " << b << " at frame " << frames << "\n";
+					}						
 			}
 		}
 	}
