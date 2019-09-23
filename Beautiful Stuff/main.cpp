@@ -148,13 +148,13 @@ void main()
 				{
 					neighborX = x;
 					neighborY = y;
-					uint8_t side = xorshift64() % 9;		
-					static const int8_t table1[] = { -1,-1,-1,0,0,0,1,1,1 };
-					static const int8_t table2[] = { -1,0,1,-1,0,1,-1,0,1 };
+					uint8_t side = xorshift64() % 8;		
+					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 };
+					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 };
 					neighborX += table1[side];
 					neighborY += table2[side];
 					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					if (neighbor == &p) neighbor = nullptr;
+					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 				}
 				
 				uint64_t r1 = xorshift64();
