@@ -6,6 +6,7 @@
 #include <fstream>
 #include <SDL/SDL_image.h>
 #include <string>
+#include <thread>
 
 #pragma comment(lib,"SDL2.lib")
 #pragma comment(lib,"SDL2_image.lib")
@@ -18,6 +19,30 @@ double REFRESH_RATE = 60;
 double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
 
 uint64_t xorshift_state = 1;
+std::vector<std::thread> workers;
+
+uint64_t xorshift64_thr(uint64_t* state)
+{
+	uint64_t x = *state;
+	x ^= x << 13;
+	x ^= x >> 7;
+	x ^= x << 17;
+	return *state = x;
+}
+
+void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
+{
+	int startX = 0;
+	int workerPixels = h / maxWorkers;
+	int startY = workerNumber * workerPixels;
+	int endX = w;
+	int endY = startY + workerPixels;
+
+	while (running)
+	{
+
+	}
+}
 uint64_t xorshift64()
 {
 	uint64_t x = xorshift_state;
@@ -65,7 +90,6 @@ double getRandomWeightedValue()
 void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
-
 	/*if (true) //for tests, remove when releasing!!!
 	{
 		std::string testStr = "1\r\n1\r\n1280\r\n720\r\n";
