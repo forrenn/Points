@@ -66,6 +66,13 @@ void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 
+	if (true) //for tests, remove when releasing!!!
+	{
+		std::string testStr = "1\r\n1\r\n1280\r\n720\r\n";
+		for (auto c : testStr)
+			std::cin.putback(c);
+	}
+
 	int w = 1280;
 	int h = 720;
 	std::string path;
