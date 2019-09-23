@@ -179,6 +179,8 @@ void main()
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&ev))
 		{
+			if (ev.type == SDL_QUIT)
+				return;
 		}		
 
 		for (int i = 0; i < threadCount; ++i)
