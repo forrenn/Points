@@ -164,8 +164,7 @@ void main()
 					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 				}
 				
-				uint64_t r1 = xorshift64();
-				r1 & 1 ? *neighbor = p : p = *neighbor;
+				xorshift64() & 1 ? *neighbor = p : p = *neighbor;
 
 				++it;
 			}
