@@ -6,7 +6,9 @@
 #include <fstream>
 #include <SDL/SDL_image.h>
 #include <string>
+#include <numeric>
 
+#define VEC2D(x,y) (((y)*h)+(x))
 #pragma comment(lib,"SDL2.lib")
 #pragma comment(lib,"SDL2_image.lib")
 #undef main
@@ -135,6 +137,9 @@ void main()
 	double refreshAccumulator = 0;
 
 	bool running = true;
+
+	std::vector<int> maze(w*h);
+
 	while (running)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
@@ -143,6 +148,8 @@ void main()
 		}		
 
 		auto it = points.begin();
+		for (auto& it : maze) it = 0;
+
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
@@ -150,21 +157,38 @@ void main()
 				MyPoint& p = *it;
 
 				MyPoint* neighbor = nullptr;
-				int neighborX, neighborY;
+				int neighborX = x, neighborY = y;
+				int goodX = x, goodY = y;
+				int step = 1;
 				while (!neighbor) //find the right neighbor
 				{
-					neighborX = x;
-					neighborY = y;
-					uint8_t side = xorshift64() % 8;		
+					maze[y*w + h]++;
+					uint8_t side = xorshift64() % 8;
 					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
 					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
 					neighborX += table1[side];
 					neighborY += table2[side];
-					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
+
+					int clampX = x, clampY = y;
+					if (std::clamp(clampX, 0, w - 1) != x || std::clamp(clampY, 0, y - 1) != y) break; //if x or y is out of bounds, then abandon attempts of finding a neighbour
+
+					if (maze[neighborY*w + neighborX]) //if we loop
+					{
+						neighborX = goodX;
+						neighborY = goodY;
+					}
+					else
+					{
+						goodX = neighborX;
+						goodY = neighborY;
+						maze[goodY*w + goodX]++;
+						neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
+						if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
+					}
+					
 				}
 				
-				xorshift64() & 1 ? *neighbor = p : p = *neighbor;
+				if (neighbor) xorshift64() & 1 ? *neighbor = p : p = *neighbor;
 
 				++it;
 			}
