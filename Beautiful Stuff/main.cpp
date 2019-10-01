@@ -105,8 +105,7 @@ void main()
 			std::cin.putback(c);
 	}*/
 
-	int w = 1280;
-	int h = 720;
+	int w, h;
 	std::string path;
 	uint64_t xorshift_state = 1;
 	std::cout << "Enter desired base image path or invalid path for random points: ";
@@ -115,7 +114,11 @@ void main()
 	std::cout << "Enter RNG seed (0 for random): ";
 	std::cin >> xorshift_state;
 	if (xorshift_state == 0)
+	{
+		srand(time(nullptr));
 		xorshift_state = xorshift_seed();
+	}
+	else srand(xorshift_state);
 
 	std::cout << "Enter desired window width (0 for default value of 1024): ";
 	std::cin >> w;
@@ -195,7 +198,7 @@ void main()
 
 		for (int i = 0; i < threadCount; ++i)
 		{
-			workers[i] = std::thread(routine, std::ref(points), i, threadCount, w, h, xorshift64(&xorshift_state), std::ref(running));
+			workers[i] = std::thread(routine, std::ref(points), i, threadCount, w, h, xorshift_seed(), std::ref(running));
 		}
 		for (auto& it_t : workers) it_t.join();
 
