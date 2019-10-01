@@ -13,12 +13,6 @@
 #pragma comment(lib,"SDL2_image.lib")
 #undef main
 
-double LOSS = 0.001; //percentage of color lost for each pixel of distance (multiplicative)
-float LOSS_MULT = (100 - LOSS) / 100;
-double REFRESH_RATE = 60;
-
-double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
-
 uint64_t xorshift_seed()
 {
 	uint64_t ret = 0;
@@ -136,6 +130,11 @@ void main()
 		h += threadCount - (h % threadCount);
 		std::cout << h << "\n";
 	}	
+
+	double REFRESH_RATE = 60;
+	std::cout << "Enter desired refresh rate (0 for default (" << REFRESH_RATE << ")): ";
+	if (REFRESH_RATE == 0.0) REFRESH_RATE = 60;
+	double REFRESH_PERIOD = 1.0 / REFRESH_RATE;
 
 	SDL_Window* window;
 	SDL_Surface* windowSurface;
