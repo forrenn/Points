@@ -87,6 +87,17 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 	*(Uint32*)px = color;
 }
 
+void getPixelRGB(SDL_Surface* s, int x, int y, uint8_t& r, uint8_t& g, uint8_t& b)
+{
+	SDL_PixelFormat* format = s->format;
+	char* pxLocation = (char*)s->pixels + s->pitch*y + x * format->BytesPerPixel;
+	uint32_t px = *(Uint32*)pxLocation;
+
+	r = (px && format->Rmask) >> format->Rshift;
+	g = (px && format->Gmask) >> format->Gshift;
+	b = (px && format->Bmask) >> format->Bshift;
+}
+
 void buildColorCountVec(std::vector<int>& ret, const std::vector<MyPoint>& pts)
 {
 	for (auto& it : ret) it = 0;
@@ -160,14 +171,10 @@ void main()
 	
 	if (img)
 	{
-		Uint32* pixels = (Uint32*)windowSurface->pixels;
-		SDL_PixelFormat* format = windowSurface->format;
 		for (int i = 0; i < w*h; i++)
 		{
-			Uint32 px = *pixels++;
-			uint8_t r = (px & format->Rmask) >> format->Rshift;
-			uint8_t g = (px & format->Gmask) >> format->Gshift;
-			uint8_t b = (px & format->Bmask) >> format->Bshift;
+			uint8_t r, g, b;
+			getPixelRGB(windowSurface, i%w, i / w, r, g, b);
 			points.push_back({ r, g, b });
 		}
 	}
