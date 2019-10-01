@@ -87,6 +87,16 @@ void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
 	*(Uint32*)px = color;
 }
 
+void buildColorCountVec(std::vector<int>& ret, const std::vector<MyPoint>& pts)
+{
+	for (auto& it : ret) it = 0;
+	for (const auto& it : pts)
+	{
+		int index = it.r + it.g * 256 + it.b * 65536;
+		ret[index]++;
+	}
+}
+
 void main()
 {
 	int threadCount;
@@ -158,10 +168,7 @@ void main()
 			uint8_t r = (px & format->Rmask) >> format->Rshift;
 			uint8_t g = (px & format->Gmask) >> format->Gshift;
 			uint8_t b = (px & format->Bmask) >> format->Bshift;
-
 			points.push_back({ r, g, b });
-			int index = r + g * 256 + b * 65536;
-			colorsCounterOld[index]++;
 		}
 	}
 	else
@@ -172,12 +179,10 @@ void main()
 			uint8_t r = xorshift64(&xorshift_state);
 			uint8_t g = xorshift64(&xorshift_state);
 			uint8_t b = xorshift64(&xorshift_state);
-
 			points.push_back({ r, g, b });
-			int index = r + g * 256 + b * 65536;
-			colorsCounterOld[index]++;
 		}
 	}
+	buildColorCountVec(colorsCounterOld, points);
 
 	uint64_t frames = 0;
 	auto startTime = std::chrono::high_resolution_clock::now();
@@ -252,7 +257,7 @@ void main()
 			if (totalColors < 100)
 			{
 				for (int i = 0; i < 16777216; ++i)
-					if (colorsCounterOld[i] > 0 && colorsCounter[i] == 0)
+					if (colorsCounterOld[i] > 0 && colorsCounter[i] == 0) //if color has disappeared
 					{
 						int r = i & 0xFF;
 						int g = (i & 0xFF00) >> 8;
