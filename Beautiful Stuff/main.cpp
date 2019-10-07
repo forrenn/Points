@@ -36,6 +36,13 @@ MyPoint* getPointByCoords(std::vector<MyPoint>& pts, int x, int y, int w, int h)
 		return &pts[y*w + x];
 }
 
+uint64_t rol(uint64_t& n, int32_t c)
+{
+	const uint64_t mask = (CHAR_BIT * sizeof(n) - 1);
+	c &= mask;
+	return (n << c) | (n >> ((-c)&mask));
+}
+
 void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
 {
 	int startX = 0;
@@ -43,6 +50,7 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 	int startY = workerNumber * workerPixels;
 	int endX = w;
 	int endY = startY + workerPixels;
+	uint64_t shift = 1;
 
 	auto it = points.begin() + (startY*w);
 	for (int y = startY; y < endY; ++y)
@@ -53,22 +61,20 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 
 			MyPoint* neighbor = nullptr;
 			int neighborX, neighborY;
+			uint64_t rval;
 			while (!neighbor) //find the right neighbor
 			{
 				neighborX = x;
 				neighborY = y;
-				uint8_t side = xorshift64(&rndSeed) % 8;
-				static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
-				static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
+				uint8_t side = (rval = xorshift64(&rndSeed)) % 8;
+				constexpr int8_t table1[] = { -1, -1, -1,  0, 0,  1, 1, 1 }; //notice the abscence of (0,0) here
+				constexpr int8_t table2[] = { -1,  0,  1, -1, 1, -1, 0, 1 }; //and here
 				neighborX += table1[side];
 				neighborY += table2[side];
-				neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-				if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
+				neighbor = getPointByCoords(points, neighborX, neighborY, w, h);				
 			}
 
-			uint64_t r1 = xorshift64(&rndSeed);
-			if (r1 & 1) *neighbor = p;
-			else p = *neighbor;
+			rval & (shift = rol(shift, 1)) ? *neighbor = p : p = *neighbor; //this logical AND works as expected, picks both sides roughly equaly
 
 			++it;
 		}
