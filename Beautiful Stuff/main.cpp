@@ -62,6 +62,13 @@ double getRandomWeightedValue()
 	return 1 / n;
 }
 
+uint64_t rol(uint64_t& n, int32_t c)
+{
+	const uint64_t mask = (CHAR_BIT * sizeof(n) - 1);
+	c &= mask;
+	return (n << c) | (n >> ((-c)&mask));
+}
+
 void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -135,6 +142,7 @@ void main()
 	double refreshAccumulator = 0;
 
 	bool running = true;
+	uint64_t shift = 1; //shifting 1 bit for nighbor swapping not being too boring 
 	while (running)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
@@ -151,11 +159,12 @@ void main()
 
 				MyPoint* neighbor = nullptr;
 				int neighborX, neighborY;
-				while (!neighbor) //find the right neighbor
+				uint64_t rval;
+				while (!neighbor) //find the right neighbor. This will run at least once
 				{
 					neighborX = x;
 					neighborY = y;
-					uint8_t side = xorshift64() % 8;		
+					uint8_t side = (rval = xorshift64()) % 8;
 					static const int8_t table1[] = { -1,-1,-1,0,0,1,1,1 }; //notice the abscence of (0,0) here
 					static const int8_t table2[] = { -1,0,1,-1,1,-1,0,1 }; //and here
 					neighborX += table1[side];
@@ -164,8 +173,8 @@ void main()
 					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
 				}
 				
-				xorshift64() & 1 ? *neighbor = p : p = *neighbor;
-
+				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor;
+				
 				++it;
 			}
 		}
