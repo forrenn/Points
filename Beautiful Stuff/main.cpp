@@ -173,7 +173,7 @@ void main()
 					//if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX //Upd from Oct 8, 2019: now it's a burden
 				}
 				
-				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor;
+				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor; //this logical AND works as expected, picks both sides roughly equaly
 				
 				++it;
 			}
