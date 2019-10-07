@@ -170,7 +170,7 @@ void main()
 					neighborX += table1[side];
 					neighborY += table2[side];
 					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX
+					//if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX //Upd from Oct 8, 2019: now it's a burden
 				}
 				
 				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor;
