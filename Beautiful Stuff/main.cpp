@@ -142,7 +142,7 @@ void main()
 	double refreshAccumulator = 0;
 
 	bool running = true;
-	uint64_t shift = 1; //shifting 1 bit for nighbor swapping not being too boring 
+	uint64_t shift = 1; //shifting 1 bit for neighbor swapping not being too boring 
 	while (running)
 	{
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
