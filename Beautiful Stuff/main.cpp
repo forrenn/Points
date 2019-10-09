@@ -34,6 +34,10 @@ struct MyPoint
 	{
 		return r == p.r && g == p.g && b == p.b;
 	}
+	bool operator>(const MyPoint& p)
+	{
+		return r > p.r && g > p.g && b > p.b;
+	}
 };
 
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
