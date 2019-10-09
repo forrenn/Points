@@ -38,6 +38,17 @@ struct MyPoint
 	{
 		return r > p.r && g > p.g && b > p.b;
 	}
+	uint8_t colorSum()
+	{
+		return r + g + b;
+	}
+	uint32_t rgbPos()
+	{
+		uint32_t ret = b;
+		ret |= uint32_t(g) << 8;
+		ret |= uint32_t(r) << 16;
+		return ret;
+	}
 };
 
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
