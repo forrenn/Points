@@ -88,6 +88,7 @@ void main()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 
+	//dead code from Oct 2019. May come to life some time?
 	/*if (true) //for tests, remove when releasing!!!
 	{
 		std::string testStr = "1\r\n1\r\n1280\r\n720\r\n";
@@ -185,10 +186,12 @@ void main()
 					neighborX += table1[side];
 					neighborY += table2[side];
 					neighbor = getPointByCoords(points, neighborX, neighborY, w, h);
-					//if (neighbor == &p) neighbor = nullptr; //DON'T REMOVE THIS, strange speedup on AMD FX //Upd from Oct 8, 2019: now it's a burden
 				}
 				
-				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor; //this logical AND works as expected, picks both sides roughly equaly
+				//only 1 bit is high in shift variable at any. Shifter is there to make picked neighbor side uncorellated (mostly) with whether or not
+				//our main point will win the dice roll. Removing the shifter will cause {-1,-1},{-1,1},{0,1},{1,0} neighbors to loose the dice with 100% chance and the rest will win 100% of the time,
+				//making the dice uninteresting. Performance impact of the shifter is one rol instruction.
+				rval & (shift = rol(shift,1)) ? *neighbor = p : p = *neighbor;
 				
 				++it;
 			}
