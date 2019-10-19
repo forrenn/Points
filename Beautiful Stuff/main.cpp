@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include "MyPoint.h"
+#include <future>
 
 #pragma comment(lib,"SDL2.lib")
 #pragma comment(lib,"SDL2_image.lib")
@@ -43,7 +44,7 @@ uint64_t rol(uint64_t& n, int32_t c)
 	return (n << c) | (n >> ((-c)&mask));
 }
 
-void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
+bool routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int w, int h, uint64_t rndSeed, bool& running)
 {
 	int startX = 0;
 	int workerPixels = h / maxWorkers;
@@ -79,6 +80,8 @@ void routine(std::vector<MyPoint>& points, int workerNumber, int maxWorkers, int
 			++it;
 		}
 	}
+
+	return true;
 }
 
 void setPixel(SDL_Surface* s, int x, int y, uint32_t r, uint32_t g, uint32_t b)
@@ -202,10 +205,11 @@ void main()
 	double refreshAccumulator = 0;
 	
 	bool running = true;
-	std::vector<std::thread> workers(threadCount);
+	std::vector<std::future<bool>> futures;
 
 	while (running)
 	{
+		futures.clear();
 		auto currFrameStartTime = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&ev))
 		{
@@ -215,10 +219,10 @@ void main()
 
 		for (int i = 0; i < threadCount; ++i)
 		{
-			workers[i] = std::thread(routine, std::ref(points), i, threadCount, w, h, xorshift_seed(), std::ref(running));
+			futures.push_back(std::async(std::launch::async, routine, std::ref(points), i, threadCount, w, h, xorshift_seed(), std::ref(running)));
 		}
-		for (auto& it_t : workers) it_t.join();
 
+		for (auto& it : futures) it.get();
 		++frames;
 		auto endTime = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedTime = endTime - startTime;
